@@ -51,9 +51,30 @@
 #define GW_ADDR2   (uint8_t) 0
 #define GW_ADDR3   (uint8_t) 1 
 
+ /* UART Configuration */
+ #define UART_PORT      USART3
+ #define UART_BAUDRATE  115200
+
+ extern UART_HandleTypeDef huart3;
+
+ void UART_Print(char *message);
+
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */  
+ void Error_Handler(void);
 
+#include <stdio.h>
+ #include <string.h>
+
+ #define printf(...) \
+     do { \
+         char buf[1024]; \
+         int len = snprintf(buf, sizeof(buf), __VA_ARGS__); \
+         HAL_UART_Transmit(&huart3, (uint8_t*)buf, len, HAL_MAX_DELAY); \
+     } while(0)
+ /* USER CODE END Private defines */
+
+ extern char buf[1024];
 
 #ifdef __cplusplus
 }
