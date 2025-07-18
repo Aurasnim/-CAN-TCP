@@ -33,6 +33,8 @@
 /* Private variables ---------------------------------------------------------*/
 struct netif gnetif; /* network interface structure */
 
+UART_HandleTypeDef huart3; // Обработчик UART
+
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void StartThread(void const * argument);
@@ -46,6 +48,52 @@ static void BSP_Config(void);
   * @param  None
   * @retval None
   */
+
+static void UART_Init(void) {
+    __HAL_RCC_USART3_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+    huart3.Instance = USART3;
+    huart3.Init.BaudRate = 115200;
+    huart3.Init.WordLength = UART_WORDLENGTH_8B;
+    huart3.Init.StopBits = UART_STOPBITS_1;
+    huart3.Init.Parity = UART_PARITY_NONE;
+    huart3.Init.Mode = UART_MODE_TX_RX;
+    huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+
+    if (HAL_UART_Init(&huart3) != HAL_OK) {
+        Error_Handler();
+    }
+}
+
+void UART_Print(char *message) {
+    HAL_UART_Transmit(&huart3, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
+}
+
+void Error_Handler(void) {
+    // Включите светодиод для индикации ошибки (например, LED3)
+    BSP_LED_Init(LED3);
+    BSP_LED_On(LED3);
+
+    // Вывод сообщения об ошибке через UART
+    printf("[UART] Critical error! System halted.\n");
+
+    // Бесконечный цикл (можно добавить мигание светодиодом)
+    while (1) {
+        BSP_LED_Toggle(LED3);
+        HAL_Delay(500);
+    }
+}
+
 int main(void)
 {
   /* STM32F2xx HAL library initialization:
@@ -54,10 +102,15 @@ int main(void)
        - Set NVIC Group Priority to 4
        - Global MSP (MCU Support Package) initialization
      */
+
+	  /* Configure the system clock to 120 MHz */
+	  SystemClock_Config();
+
   HAL_Init();  
+  UART_Init();
   
-  /* Configure the system clock to 120 MHz */
-  SystemClock_Config(); 
+  printf("\n\rUART Test: Hello, this is STM32!\n\r");
+  HAL_Delay(1000);
   
   /* Init thread */
 #if defined(__GNUC__)
@@ -80,6 +133,7 @@ int main(void)
   * @param  argument not used
   * @retval None
   */
+
 static void StartThread(void const * argument)
 {  
   /* Initialize LEDs */
@@ -87,10 +141,16 @@ static void StartThread(void const * argument)
   
   /* Create tcp_ip stack thread */
   tcpip_init(NULL, NULL);
-  
+
   /* Initialize the LwIP stack */
   Netif_Config();
   
+  /* Проверяем, что сеть поднята */
+    if (!netif_is_up(&gnetif)) {
+        printf("[ERROR] Network interface is down!\n\r");
+        Error_Handler();
+    }
+
   /* Initialize webserver demo */
   http_server_netconn_init();
   

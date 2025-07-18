@@ -40,24 +40,45 @@ void User_notification(struct netif *netif)
 {
   if (netif_is_up(netif))
   {
+	    printf("We are in app_ethernet");
 #ifdef USE_DHCP
     /* Update DHCP state machine */
     DHCP_state = DHCP_START;
+    printf("[UART] Network UP (DHCP mode)\n");
 #else  
-    /* Turn On LED 1 to indicate ETH and LwIP init success*/
+    /* Static IP mode - turn on LED1 and print network info */
+
     BSP_LED_On(LED1);
+    printf("[UART] Network UP (Static IP)\n");
+    printf("[UART] IP: %d.%d.%d.%d\n",
+           ip4_addr1(&netif->ip_addr),
+           ip4_addr2(&netif->ip_addr),
+           ip4_addr3(&netif->ip_addr),
+           ip4_addr4(&netif->ip_addr));
+    printf("[UART] Netmask: %d.%d.%d.%d\n",
+           ip4_addr1(&netif->netmask),
+           ip4_addr2(&netif->netmask),
+           ip4_addr3(&netif->netmask),
+           ip4_addr4(&netif->netmask));
+    printf("[UART] Gateway: %d.%d.%d.%d\n",
+           ip4_addr1(&netif->gw),
+           ip4_addr2(&netif->gw),
+           ip4_addr3(&netif->gw),
+           ip4_addr4(&netif->gw));
 #endif /* USE_DHCP */
- }
- else
+  }
+  else
   {  
 #ifdef USE_DHCP
     /* Update DHCP state machine */
     DHCP_state = DHCP_LINK_DOWN;
+    printf("[UART] Network DOWN (DHCP mode)\n");
 #else
-    /* Turn On LED 2 to indicate ETH and LwIP init error */
+    /* Static IP mode - turn on LED2 to indicate error */
     BSP_LED_On(LED2);
+    printf("[UART] Network DOWN (Static IP)\n");
 #endif  /* USE_DHCP */ 
-  } 
+  }
 }
 
 #ifdef USE_DHCP
