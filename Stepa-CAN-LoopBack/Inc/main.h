@@ -22,7 +22,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f2xx_hal.h"
-#include "stm322xg_eval.h"
+#include "stm32f2xx_nucleo_144.h"
+#include <stdio.h>
+#include <string.h>
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -43,9 +45,32 @@
 #define CANx_RX_PIN                    GPIO_PIN_11
 #define CANx_RX_GPIO_PORT              GPIOA 
 #define CANx_RX_AF                     GPIO_AF9_CAN1
+/* USER CODE END Private defines */
+
+ extern char buf[1024];
+
+ extern UART_HandleTypeDef huart3;
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void LED_Display(uint8_t Ledstatus);
+void UART_Print(char *message);
+
+#include <stdio.h>
+ #include <string.h>
+
+ #define printf(...) \
+     do { \
+         char buf[1024]; \
+         int len = snprintf(buf, sizeof(buf), __VA_ARGS__); \
+         HAL_UART_Transmit(&huart3, (uint8_t*)buf, len, HAL_MAX_DELAY); \
+     } while(0)
+ /* USER CODE END Private defines */
+
+ extern char buf[1024];
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __MAIN_H */

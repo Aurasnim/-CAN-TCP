@@ -39,6 +39,7 @@ CAN_RxHeaderTypeDef   RxHeader;
 uint8_t               TxData[8];
 uint8_t               RxData[8];
 uint32_t              TxMailbox;
+UART_HandleTypeDef huart3;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -46,6 +47,41 @@ static void Error_Handler(void);
 static HAL_StatusTypeDef CAN_Polling(void);
 
 /* Private functions ---------------------------------------------------------*/
+static void UART_Init(void) {
+    __HAL_RCC_USART3_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+    huart3.Instance = USART3;
+    huart3.Init.BaudRate = 115200;
+    huart3.Init.WordLength = UART_WORDLENGTH_8B;
+    huart3.Init.StopBits = UART_STOPBITS_1;
+    huart3.Init.Parity = UART_PARITY_NONE;
+    huart3.Init.Mode = UART_MODE_TX_RX;
+    huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+
+    if (HAL_UART_Init(&huart3) != HAL_OK) {
+        Error_Handler();
+    }
+}
+
+void UART_Print(char *message) {
+    HAL_UART_Transmit(&huart3, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
+}
+
+int _write(int fd, char *ptr, int len) {
+    (void)fd;
+    HAL_UART_Transmit(&huart3, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+    return len;
+}
 
 /**
   * @brief  Main program
@@ -64,7 +100,9 @@ int main(void)
   
   /* Configure the system clock to 120 MHz */
   SystemClock_Config();
-  
+  /* USART3 PIN initialization */
+  UART_Init();
+
   /* Configure LED1, LED2 and LED3 */
   BSP_LED_Init(LED1);
   BSP_LED_Init(LED2);
@@ -86,6 +124,21 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
+	  CAN_TxHeaderTypeDef TxHeader;
+	  CAN_RxHeaderTypeDef RxHeader;
+	  uint8_t TxData[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+	  uint8_t RxData[8];
+	  uint32_t TxMailbox;
+
+	  if (HAL_CAN_AddTxMessage(&CanHandle, &TxHeader, TxData, &TxMailbox) == HAL_OK) {
+	      printf("CAN Message Sent (ID: 0x%lX)\r\n", TxHeader.StdId);
+	  }
+
+	  if (HAL_CAN_GetRxFifoFillLevel(&CanHandle, CAN_RX_FIFO0) > 0) {
+	      HAL_CAN_GetRxMessage(&CanHandle, CAN_RX_FIFO0, &RxHeader, RxData);
+	      printf("CAN Message Received (ID: 0x%lX, Data: %02X %02X %02X %02X)\r\n",
+	             RxHeader.StdId, RxData[0], RxData[1], RxData[2], RxData[3]);
+	  }
   } 
 }
 
@@ -198,8 +251,8 @@ HAL_StatusTypeDef CAN_Polling(void)
   *            AHB Prescaler                  = 1
   *            APB1 Prescaler                 = 4
   *            APB2 Prescaler                 = 2
-  *            HSE Frequency(Hz)              = 25000000
-  *            PLL_M                          = 25
+  *            HSE Frequency(Hz)              = 8000000
+  *            PLL_M                          = 8
   *            PLL_N                          = 240
   *            PLL_P                          = 2
   *            PLL_Q                          = 5
@@ -215,10 +268,10 @@ static void SystemClock_Config(void)
 
   /* Enable HSE Oscillator and activate PLL with HSE as source */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 240;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 5;
