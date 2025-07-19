@@ -1,0 +1,2 @@
+../Core/Src/stm32f2xx_hal_msp.c:49:6:HAL_CAN_MspInit	1
+../Core/Src/stm32f2xx_hal_msp.c:87:6:HAL_CAN_MspDeInit	1
