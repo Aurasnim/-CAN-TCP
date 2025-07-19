@@ -1,7 +1,0 @@
-C:/Users/123/STM32CubeIDE/Repository/STM32Cube_FW_F2_V1.9.5/Drivers/BSP/STM322xG_EVAL/stm322xg_eval_io.c:98:9:BSP_IO_Init	2
-C:/Users/123/STM32CubeIDE/Repository/STM32Cube_FW_F2_V1.9.5/Drivers/BSP/STM322xG_EVAL/stm322xg_eval_io.c:122:9:BSP_IO_ITGetStatus	1
-C:/Users/123/STM32CubeIDE/Repository/STM32Cube_FW_F2_V1.9.5/Drivers/BSP/STM322xG_EVAL/stm322xg_eval_io.c:133:6:BSP_IO_ITClear	1
-C:/Users/123/STM32CubeIDE/Repository/STM32Cube_FW_F2_V1.9.5/Drivers/BSP/STM322xG_EVAL/stm322xg_eval_io.c:153:9:BSP_IO_ConfigPin	1
-C:/Users/123/STM32CubeIDE/Repository/STM32Cube_FW_F2_V1.9.5/Drivers/BSP/STM322xG_EVAL/stm322xg_eval_io.c:167:6:BSP_IO_WritePin	1
-C:/Users/123/STM32CubeIDE/Repository/STM32Cube_FW_F2_V1.9.5/Drivers/BSP/STM322xG_EVAL/stm322xg_eval_io.c:178:10:BSP_IO_ReadPin	1
-C:/Users/123/STM32CubeIDE/Repository/STM32Cube_FW_F2_V1.9.5/Drivers/BSP/STM322xG_EVAL/stm322xg_eval_io.c:188:6:BSP_IO_TogglePin	2
